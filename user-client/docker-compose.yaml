@@ -1,0 +1,7 @@
+services:
+  user-client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - "./:/home/letmehelp/user-client/"
