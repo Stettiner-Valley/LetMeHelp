@@ -1,26 +1,34 @@
 # User Client
 
+This is an Electron-like, web-based, and cross-platform user client written in Golang.
+
+It uses the [Wails](https://wails.io/) Go library to package the Vue.js application, a local web server, and a Webkit
+browser into a single executable.
+
 ## Development Environment
 
-To start:
+Use `rebuild.sh`, `start.sh`, and `stop.sh` to control the Dockerized development environment.
 
-```shell
-docker compose build
-docker compose up -d
-docker compose exec -it user-client /bin/bash
-```
+Once inside the container, go to the `~/src/letmehelp` directory and run `wails dev`.
 
-To stop:
+The development web server will be available at http://localhost:34115/.
 
-```shell
-docker compose down
-```
+The front-end development server will be available at http://localhost:5173/.
 
-## Package Executable
+Note that it takes a minute or two for the development server to finish compiling.
 
-```shell
-pyinstaller main.py --add-data assets:. --add-binary /usr/local/lib/libpython3.11.so.1.0:. --onefile
-```
+TODO: The dev server running in Docker has an issue with GTK :/
 
-Once done, go to the `dist` folder and copy the `_internal/assets` folder next to the `main` binary.
-Rename `main` to `letmehelp` for use in the test environment.
+## Building Executables
+
+Run the following in the `src/letmehelp` directory:
+
+* Linux (x64): `wails build -platform linux/amd64`
+* Windows (x64): `wails build -platform windows/amd64`
+
+Binaries will be available under `src/letmehelp/build/bin`.
+
+Since Wails does not support crosscompiling to Mac, `wails build -platform darwin/arm64` needs to be run
+on a Mac host (not in the Dockerized development above).
+
+See [Wails documentation](https://wails.io/docs/reference/cli#platforms) for more information.

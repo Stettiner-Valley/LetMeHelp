@@ -3,5 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    ports:
+      - "34115:34115"
+      - "5173:5173"
     volumes:
-      - "./:/home/letmehelp/user-client/"
+      - "./src:/home/letmehelp/src"
