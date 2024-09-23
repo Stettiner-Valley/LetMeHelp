@@ -27,6 +27,7 @@ Run the following in the `src/letmehelp` directory:
 * Windows (x64): `wails build -platform windows/amd64`
 
 Binaries will be available under `src/letmehelp/build/bin`.
+Copy the binary to `test-environment/opt`.
 
 Since Wails does not support crosscompiling to Mac, `wails build -platform darwin/arm64` needs to be run
 on a Mac host (not in the Dockerized development above).

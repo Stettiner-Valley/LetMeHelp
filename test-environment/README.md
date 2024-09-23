@@ -13,21 +13,7 @@ It will also check for the user client executable `/opt/letmehelp`, and if avail
 **Once the user client is ready, rename it to `letmehelp`, place it in the `test-environment/opt` folder, 
 and rebuild the image.**
 
-To build and run the Docker image:
-
-```shell
-docker build -t letmehelp-testenv:linux .
-docker run --rm -d \
-  --name=letmehelp-testenv-linux \
-  -p 3000:3000 \
-  letmehelp-testenv:linux
-```
-
-To stop it:
-
-```shell
-docker stop letmehelp-testenv-linux
-```
+Use `rebuild.sh`, `start.sh`, and `stop.sh` to control the Dockerized test environment.
 
 After running the container, the test environment can be accessed in the browser at http://localhost:3000/.
 
