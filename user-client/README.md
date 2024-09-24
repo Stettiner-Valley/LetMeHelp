@@ -11,13 +11,15 @@ Use `rebuild.sh`, `start.sh`, and `stop.sh` to control the Dockerized developmen
 
 Once inside the container, go to the `~/src/letmehelp` directory and run `wails dev`.
 
+**Note: `wails dev` requires access to X11. `docker-compose.yaml` is currently configured to bind X11, and therefore
+expects the host machine to be running Linux. If you're not on Linux, consider editing `docker-compose.yaml`.
+You can still build the Linux and Windows binaries without X11.**
+
 The development web server will be available at http://localhost:34115/.
 
 The front-end development server will be available at http://localhost:5173/.
 
 Note that it takes a minute or two for the development server to finish compiling.
-
-TODO: The dev server running in Docker has an issue with GTK :/
 
 ## Building Executables
 

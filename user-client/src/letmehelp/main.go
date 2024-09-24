@@ -8,6 +8,9 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 )
 
+const appWidth = 640
+const appHeight = 480
+
 //go:embed all:frontend/dist
 var assets embed.FS
 
@@ -17,9 +20,11 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:  "letmehelp",
-		Width:  1024,
-		Height: 768,
+		Title:         "LetMeHelp",
+		Width:         appWidth,
+		Height:        appHeight,
+		AlwaysOnTop:   true,
+		DisableResize: true,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
