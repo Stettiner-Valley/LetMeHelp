@@ -26,14 +26,14 @@ function screenshot() {
   })
 }
 
-function randomIntFromInterval(min, max) { // min and max included
+function randomIntFromInterval(min: number, max: number) { // min and max included
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
 async function moveCursor() {
   // TODO: Take input
   let pos = await WindowGetPosition()
-  MoveCursor(pos.x + randomIntFromInterval(50, 400), pos.y + randomIntFromInterval(50, 400))
+  await MoveCursor(pos.x + randomIntFromInterval(50, 400), pos.y + randomIntFromInterval(50, 400))
 }
 
 function typeWithKeyboard() {
