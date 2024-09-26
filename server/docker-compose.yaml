@@ -1,0 +1,9 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8765:8765"
+    volumes:
+      - "./src:/home/letmehelp/src"
