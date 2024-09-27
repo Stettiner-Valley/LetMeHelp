@@ -28,6 +28,8 @@ Run the following in the `src/letmehelp` directory:
 * Linux (x64): `wails build -platform linux/amd64`
 * Windows (x64): `wails build -platform windows/amd64`
 
+To enable debugging and devtools, pass `-debug` to the build command.
+
 Binaries will be available under `src/letmehelp/build/bin`.
 Copy the binary to `test-environment/opt`.
 
@@ -35,3 +37,11 @@ Since Wails does not support crosscompiling to Mac, `wails build -platform darwi
 on a Mac host (not in the Dockerized development above).
 
 See [Wails documentation](https://wails.io/docs/reference/cli#platforms) for more information.
+
+## Notes
+
+When using `wails dev`, the WebSocket connection may not work for `localhost:8765` (because it's running in a Docker
+container, but thr server is running elsewhere).
+To solve this, either build the binary and run, or use your internal IP address  (e.g. `192.168.X.X`).
+We can also later create a `docker-compose.yaml` in the root of the project and run everything
+at once, so that then we could call services via Docker's DNS (e.g. `server:8765`).
