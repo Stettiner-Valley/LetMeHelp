@@ -9,6 +9,7 @@ python = "^3.10"
 pyautogui = "^0.9.54"
 pillow = "^10.4.0"
 openai = "^1.47.0"
+python-dotenv = "^1.0.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.8.0"
