@@ -41,7 +41,7 @@ async def process(websocket):
     # A dictionary for keeping contextual data for a session like all user
     # and server messages (for this connection only) in chronological order
     # (e.g. to send to LLMs as context), and any other data that needs to
-    # be shared between messages.
+    # be shared between messages (TODO: to be determined).
     user_context = {
         "messages": []
     }
@@ -63,19 +63,48 @@ async def process(websocket):
                     await websocket.send(error_message("Invalid message JSON."))
                     continue
                 if event["type"] == "text":
-                    # The user has sent a textual message.
-                    # TODO: Connect this to other AI-powered parts of the app!
-                    # TODO: What if the user sends another message while this on is processing?
+                    # The user has sent a textual message (e.g. the original query or follow-up inputs).
+                    # Keep it in the context.
+                    user_context["messages"].append({"from": "user", "type": "text", "value": event["value"]})
+
+                    # Important note: The code here should not block too long! If it does, next messages
+                    # won't be read until the next iteration of "async for message in ...".
+                    # Make each iteration as short as possible and store data in user_context for use
+                    # between iterations.
+
+                    # TODO: Would we want a way for the user to cancel the current operation,
+                    # e.g. by adding a button on the UI?
+
+                    # TODO: Remember to add the server's textual response to user_context!
+                    # user_context["messages"].append({"from": "server", "type": "text", "value": SERVER_MESSAGE})
+
+                    # Send a message
                     # TODO: It's nice to always send "I'm thinking ... " to let the users know
                     # it's not stuck! Maybe if it takes too long, we can keep sending nice
                     # messages like "Still thinking ...", "Just a little longer ...", etc.
                     await websocket.send(text_message("I'm thinking ..."))
-                    time.sleep(2)
-                    await websocket.send(text_message("That's what she said!"))
-                # TODO: Handle other client message types (e.g. screenshot, cursor-location, etc.)
-                # elif event["type"] == "":
-                #   # TODO: Do something with it!
-                #    pass
+
+                    # TODO: Connect this to other AI-powered parts of the app!
+                    await websocket.send(text_message("Nothing to do for now. :)"))
+
+                    # Possible actions
+                    # ------------------------------------------------------------------------------
+                    # Important note: For actions that have a response, do one action per iteration!
+                    # The actual response will be available in the next iteration of the loop.
+                    # This restriction does not apply text_message and actions like click-at.
+                    # ------------------------------------------------------------------------------
+
+                    # These actions don't have responses
+                    # await websocket.send(action_message("click-at", "1312,1039"))
+                    # await websocket.send(action_message("type-with-keyboard", "LetMeHelp is awesome!"))
+
+                    # These actions have responses
+                    # await websocket.send(action_message("get-screenshot", ""))
+                    # await websocket.send(action_message("get-cursor-location", ""))
+                elif event["type"] == "screenshot":
+                    await websocket.send(text_message("Received the screenshot"))
+                elif event["type"] == "cursor-location":
+                    await websocket.send(text_message("Received cursor location"))
                 else:
                     await websocket.send(error_message("Unsupported message type."))
             except Exception as e:

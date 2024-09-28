@@ -37,12 +37,6 @@ func (a *App) startup(ctx context.Context) {
 	runtime.WindowSetPosition(ctx, screenWidth-appWidth, screenHeight-appHeight)
 }
 
-// Query sends the user query to the server
-func (a *App) Query(query string) string {
-	// TODO: Do something with query
-	return "I'm thinking ..."
-}
-
 // Screenshot takes a screenshot and returns the base64 encoded image
 func (a *App) Screenshot() string {
 	// TODO: How to find the active screen?
@@ -62,7 +56,8 @@ func (a *App) TypeWithKeyboard(input string) {
 	robotgo.TypeStr(input)
 }
 
-// MoveCursor moves the cursor to the specified x and y coordinates
-func (a *App) MoveCursor(x int, y int) {
+// CursorClick moves the cursor to the specified x and y coordinates and clicks
+func (a *App) CursorClick(x int, y int) {
 	robotgo.Move(x, y)
+	robotgo.Click()
 }

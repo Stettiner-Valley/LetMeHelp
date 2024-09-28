@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {nextTick, reactive, ref} from 'vue'
-import {Query, Screenshot, GetCursorLocation, TypeWithKeyboard, MoveCursor} from '../../wailsjs/go/main/App'
+import {Screenshot, GetCursorLocation, TypeWithKeyboard, CursorClick} from '../../wailsjs/go/main/App'
 import {WindowGetPosition, WindowHide, WindowSetPosition, WindowShow} from "../../wailsjs/runtime"
 
 interface DisplayMessage {
@@ -65,7 +65,7 @@ function connect() {
       addServerMessage("Server disconnected.")
     }
   }
-  socket.onmessage = function (event) {
+  socket.onmessage = async function (event) {
     console.log("Message: ", event)
     if (event.data) {
       try {
@@ -79,14 +79,34 @@ function connect() {
             // A textual message from the server
             addServerMessage(response.value)
             break
+          case "get-screenshot":
+            let screenshotData = await screenshot()
+            sendSocketMessage("screenshot", screenshotData)
+            break
+          // TODO: Do we want to hide the window, perform the action, and show the window for all actions?
+          case "get-cursor-location":
+            let cursorLocation = await GetCursorLocation()
+            sendSocketMessage("cursor-location", cursorLocation)
+            break
+          case "click-at":
+            let coordinates = response.value.split(",")
+            if (coordinates.length !== 2) {
+              addServerMessage("Oops! The server returned invalid coordinates to click at.")
+              return
+            }
+            await CursorClick(parseInt(coordinates[0], 10), parseInt(coordinates[1], 10))
+            break
+          case "type-with-keyboard":
+            await TypeWithKeyboard(response.value)
+            break
           // TODO: Implement other message types (e.g. get-screenshot, get-cursor-location, etc.)
           /*case "WHATEVER_ACTION_NAME":
             // An "XXXXX" action from the server
             // Do the action!
             break;*/
           default:
-            addServerMessage(`Oops! The client doesn't support the message type (${response.value}).`)
-            break;
+            addServerMessage(`Oops! The client doesn't support the message type (${response.type}).`)
+            break
         }
       } catch(error) {
         addServerMessage("Failed to JSON decode server response. See console.")
@@ -125,82 +145,42 @@ function addServerMessage(content: string) {
   addMessage("server", content)
 }
 
-function query() {
-  data.query = data.query.trim()
-  if (!data.query) {
-    return
-  }
-  addUserMessage(data.query)
+function sendSocketMessage(type: string, value: string) {
   if (data.socket && data.socket.readyState == 1) {
     // TODO: Right now, we're doing this asynchronously, meaning we don't block user input
     // until the server responds. The server should have a queue on its own end to respond to messages.
     // TODO: How to cancel the current operation (similar to stop generating in ChatGPT)?
     let msg: Message = {
-      type: "text",
-      value: data.query,
+      type: type,
+      value: value,
     }
     let msgJSON: string = JSON.stringify(msg)
     data.socket.send(msgJSON)
   } else {
     addServerMessage("Server connection error. Please check settings.")
   }
+}
+
+function query() {
+  data.query = data.query.trim()
+  if (!data.query) {
+    return
+  }
+  addUserMessage(data.query)
+  sendSocketMessage("text", data.query)
   data.query = ""
-  // ABSOLUTELY IMPORTANT TODO: WHEN THE USER HAS JUST SENT A MESSAGE,
-  // WE EITHER HAVE TO DISABLE THE INPUT BOX UNTIL THE SERVER HAS RESPONDED (EASY),
-  // OR LET THE USER KEEP SENDING MESSAGES, BUT THE SERVER DECIDES WHEN TO RESPOND
-  // AND TO WHICH MESSAGE (DIFFICULT).
-  //
-  // TODO: How to check for action inside the message and act accordingly?
-  // Those items probably also need some message to show to the user, but also an action to be executed.
-  //
-  // TODO: While the request has been sent and we're waiting for the response, the app should
-  // show "I'm thinking ..." or some loader.
 }
 
 async function screenshot() {
   let pos = await WindowGetPosition()
   WindowHide()
-  setTimeout(function(){
-    Screenshot().then(base64Image => {
-      data.screenshotBase64 = base64Image
-      WindowShow()
-      WindowSetPosition(pos.x, pos.y)
-    })
-  }, 500)
-}
-
-function randomIntFromInterval(min: number, max: number) { // min and max included
-  return Math.floor(Math.random() * (max - min + 1) + min)
-}
-
-async function moveCursor() {
-  // TODO: Take input
-  let pos = await WindowGetPosition()
-  await MoveCursor(pos.x + randomIntFromInterval(50, 400), pos.y + randomIntFromInterval(50, 400))
-}
-
-function typeWithKeyboard() {
-  // TODO: Take input
-  if (userInput.value) {
-    userInput.value.focus()
-  }
-  TypeWithKeyboard("LetMeHelp is awesome!")
-}
-
-function getCursorLocation() {
-  GetCursorLocation().then(coordinates => {
-    addServerMessage(coordinates)
-  })
-}
-
-async function showAndHide() {
-  // TODO: Take input
-  let pos = await WindowGetPosition()
-  WindowHide()
-  setTimeout(function() {
-    WindowShow()
-    WindowSetPosition(pos.x, pos.y)
-  }, 1000)
+  // Wait for the screen to hide
+  await new Promise(f => setTimeout(f, 500))
+  let screenshotBase64Data = await Screenshot()
+  // Restore the window
+  WindowShow()
+  WindowSetPosition(pos.x, pos.y)
+  return screenshotBase64Data
 }
 </script>
 
@@ -225,10 +205,9 @@ async function showAndHide() {
         <div class="contents debug">
           <div class="buttons">
             <button class="btn" @click="screenshot">Screenshot</button>
-            <button class="btn" @click="moveCursor">Move Cursor</button>
-            <button class="btn" @click="typeWithKeyboard">Type with Keyboard</button>
-            <button class="btn" @click="getCursorLocation">Get Cursor Location</button>
-            <button class="btn" @click="showAndHide">Show and Hide Window</button>
+<!--            <button class="btn" @click="moveCursor">Move Cursor</button>-->
+<!--            <button class="btn" @click="typeWithKeyboard">Type with Keyboard</button>-->
+<!--            <button class="btn" @click="getCursorLocation">Get Cursor Location</button>-->
           </div>
           <img v-if="data.screenshotBase64" alt="" v-bind:src="'data:image/jpeg;base64,'+data.screenshotBase64" onerror="this.style.display='none'"/>
         </div>
