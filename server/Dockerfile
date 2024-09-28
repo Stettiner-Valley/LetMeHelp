@@ -15,6 +15,13 @@ RUN addgroup --gid ${GROUP_ID} letmehelp \
 RUN mkdir -p /home/letmehelp/src && \
     chown -R ${USER_ID}:${GROUP_ID} /home/letmehelp
 
+# Make a FIFO pipe to act as a signaling mechanism to restart the server
+RUN mkfifo -m 0666 /tmp/restart-server
+
+# Make a tiny script to restart the server
+RUN echo "#!/bin/bash\necho 'restart' > /tmp/restart-server" > /usr/bin/restart-server && \
+    chmod +x /usr/bin/restart-server
+
 RUN pip install poetry
 
 USER letmehelp

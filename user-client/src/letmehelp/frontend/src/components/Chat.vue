@@ -30,7 +30,7 @@ const data: Data = reactive({
   query: "",
   screenshotBase64: "",
   messages: [],
-  serverAddress: "192.168.178.38:8765", // TODO: Change back to localhost or our server address
+  serverAddress: "10.240.183.83:8765", // TODO: Change back to localhost or our server address
   serverStatus: "Disconnected",
   settingsModalOpen: false,
   socket: null,
