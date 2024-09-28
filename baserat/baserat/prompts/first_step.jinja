@@ -2,7 +2,7 @@ So this is the user query: {{ user_query }}.
 
 Given installed applications, which applications can be used to perform user query?
 Now see if any one of these applications are visible in the screenshot.
-If user has more than one similar applications open then you should be confused and report it back!
+If user has more than one similar applications active then you should be confused and report it back (Remember if only one app is active and other similar apps are minimize or hidden then you should not be confused EXTREMELY IMPORTANT)!
 Please return your response in valid json format that I can put in json.loads() without an error - this is extremely important. Do not add any leading or trailing characters.
 Expected LLM Response
 {
@@ -11,7 +11,7 @@ Expected LLM Response
     "reason": "..",
     "application_name": ".."
 }
-"are_you_confused" should be boolean and it should indicate if user has more than one similar applications open where you can execute user query
+"are_you_confused" should be boolean and it should indicate if user has more than one similar applications active (not minimized or hidden) where you can execute user query
 "is_application_active" should be boolean and it should indicates if application is visible in the screenshot.
 "reason" should include which applications is needed to execute these steps and explanation of "is_application_active" status here.
 "application_name" if application is active then just write name of open (active) application here nothing else otherwise put None.
