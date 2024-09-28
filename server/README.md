@@ -21,6 +21,8 @@ following actions, one-at-a-time, until the goal has been achieved:
 
 Use `rebuild.sh`, `start.sh`, and `stop.sh` to control the Dockerized development environment.
 
+You'd need to run `poetry run python -m server` inside the shell, or adjust `entrypoint.sh` to do it automatically.
+
 Once the server has been started, it is available at `localhost:8765` and `YOUR_NETWORK_IP:8765` if allowed by 
 your firewall. Note that since it uses the web-socket protocol, it cannot be directly opened in the browser.
 

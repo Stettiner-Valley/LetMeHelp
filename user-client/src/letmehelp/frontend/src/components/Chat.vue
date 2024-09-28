@@ -3,7 +3,7 @@ import {nextTick, reactive, ref} from 'vue'
 import {Query, Screenshot, GetCursorLocation, TypeWithKeyboard, MoveCursor} from '../../wailsjs/go/main/App'
 import {WindowGetPosition, WindowHide, WindowSetPosition, WindowShow} from "../../wailsjs/runtime"
 
-interface Message {
+interface DisplayMessage {
   from: string
   content: string
 }
@@ -11,16 +11,16 @@ interface Message {
 interface Data {
   query: string,
   screenshotBase64: string,
-  messages: Message[],
+  messages: DisplayMessage[],
   serverAddress: string,
   serverStatus: string,
   settingsModalOpen: boolean,
   socket: WebSocket|null
 }
 
-// TODO: Implement and use!
-interface ServerResponse {
-
+interface Message {
+  type: string,
+  value: string,
 }
 
 const userInput = ref<HTMLTextAreaElement | null>(null)
@@ -30,7 +30,7 @@ const data: Data = reactive({
   query: "",
   screenshotBase64: "",
   messages: [],
-  serverAddress: "localhost:8765",
+  serverAddress: "192.168.178.38:8765", // TODO: Change back to localhost or our server address
   serverStatus: "Disconnected",
   settingsModalOpen: false,
   socket: null,
@@ -41,6 +41,9 @@ function clearMessages() {
 }
 
 function connect() {
+  if (data.socket) {
+    data.socket.close()
+  }
   data.serverStatus = "Connecting"
   // TODO: Clean up
   let socket = new WebSocket(`ws://${data.serverAddress}`)
@@ -56,18 +59,39 @@ function connect() {
     console.log("Close: ", event)
     if (!event.wasClean) {
       data.serverStatus = "Error (see console)"
+      addServerMessage("Failed to connect to the server. Please see settings.")
     } else {
       data.serverStatus = "Disconnected"
+      addServerMessage("Server disconnected.")
     }
   }
   socket.onmessage = function (event) {
-    // TODO: JSON decode the message, which can contain both
-    // a message, as well as an action.
-    // TODO: If it does have an action, take the action from here
-    // (e.g. take a screenshot and send it to the server -- and maybe also log it as a message?).
     console.log("Message: ", event)
     if (event.data) {
-
+      try {
+        const response: Message = JSON.parse(event.data)
+        switch (response.type) {
+          case "error":
+            // An error message from the server
+            addServerMessage(`Oops! Something went wrong: ${response.value}`)
+            break
+          case "text":
+            // A textual message from the server
+            addServerMessage(response.value)
+            break
+          // TODO: Implement other message types (e.g. get-screenshot, get-cursor-location, etc.)
+          /*case "WHATEVER_ACTION_NAME":
+            // An "XXXXX" action from the server
+            // Do the action!
+            break;*/
+          default:
+            addServerMessage(`Oops! The client doesn't support the message type (${response.value}).`)
+            break;
+        }
+      } catch(error) {
+        addServerMessage("Failed to JSON decode server response. See console.")
+        console.log(error)
+      }
     }
   }
   data.socket = socket
@@ -82,12 +106,12 @@ function adjustTextarea() {
 }
 
 async function addMessage(from: string, content: string) {
-  let message: Message = {
+  let message: DisplayMessage = {
     from: from,
     content: content
   }
   data.messages.push(message)
-  await nextTick();
+  await nextTick()
   if (messagesContainer.value) {
     messagesContainer.value!.scrollTop = messagesContainer.value!.scrollHeight
   }
@@ -111,7 +135,12 @@ function query() {
     // TODO: Right now, we're doing this asynchronously, meaning we don't block user input
     // until the server responds. The server should have a queue on its own end to respond to messages.
     // TODO: How to cancel the current operation (similar to stop generating in ChatGPT)?
-    data.socket.send(data.query)
+    let msg: Message = {
+      type: "text",
+      value: data.query,
+    }
+    let msgJSON: string = JSON.stringify(msg)
+    data.socket.send(msgJSON)
   } else {
     addServerMessage("Server connection error. Please check settings.")
   }

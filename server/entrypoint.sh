@@ -7,4 +7,9 @@ if [ -f pyproject.toml ]; then
 fi
 
 echo "Running the server"
-poetry run python -m server
+
+# Enable when deploying
+# poetry run python -m server &
+
+# Keep the container alive
+tail -f /dev/null
