@@ -6,17 +6,15 @@ import click
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from baserat import screen
+from baserat import screen, interpreter, utils
+from jinja2 import Environment, FileSystemLoader
+
+jinja_env = Environment(loader = FileSystemLoader(os.path.join(os.getcwd(), "baserat", "prompts")))
 
 load_dotenv()
 
 
-@click.command()
-def main(args=None) -> int:
-    click.echo("Replace this message by putting your code into "
-               "baserat.cli.main")
-    click.echo("See click documentation at https://click.palletsprojects.com/")
-
+def _code_for_corordinates():
     # Define the folder path containing PNG images
     folder_path = os.path.join(os.getcwd(), "baserat", "data")
     # (37,358), (128,410)
@@ -26,7 +24,7 @@ def main(args=None) -> int:
             "screen_view_prompt": "what is the name of the presentation software shown? only return 'full name' nothing else",
             "screen_pixel_prompt": f"My screen size is {screen.get_size()}, I want you to give me only co-ordinates of where I need to click to select slide with bullet points. Only return co ordinates in (x,y) e.g (12,34) no other text!",
             "screen_view_ground_truth": "microsoft powerpoint",
-            "screen_pixel_ground_truth": "(37,358), (128,410)" # (37,358), (128,410)
+            "screen_pixel_ground_truth": "(37,358), (128,410)"  # (37,358), (128,410)
         },
         {
             "screen_view_prompt": "Is slide with bullet point selected already? Only answer Yes or No",
@@ -85,29 +83,83 @@ def main(args=None) -> int:
             print(f"Error processing {filename}: {str(e)}")
 
     print("All PNG images processed.")
+
+
+def execute_next_step(base64_encoded_screen_shot, system_prompt, user_query):
+    next_step_template = jinja_env.get_template('next_step.jinja')
+    next_step_prompt = next_step_template.render(user_query=user_query)
+
+    print("Executing next steps ..")
+    llm_resp = send_msg_to_llm(base64_encoded_screen_shot, system_prompt, next_step_prompt)
+    print(llm_resp)
+    llm_resp = utils.jsonify(llm_resp)
+    print(llm_resp)
+    print("Self asking ..")
+    self_ask_template = jinja_env.get_template('self_ask.jinja')
+    self_ask_prompt = self_ask_template.render(user_query=user_query, llm_json_response=llm_resp)
+    llm_resp = send_msg_to_llm(base64_encoded_screen_shot, system_prompt, self_ask_prompt)
+    print(llm_resp)
+    llm_resp = utils.jsonify(llm_resp)
+    print(llm_resp)
+
+    interpreter.execute_key_commands(llm_resp["keys"])
+
+
+@click.command()
+def main(args=None) -> int:
+    click.echo("Replace this message by putting your code into "
+               "baserat.cli.main")
+    click.echo("See click documentation at https://click.palletsprojects.com/")
+
+    system_template = jinja_env.get_template('system.jinja')
+    first_step_template = jinja_env.get_template('first_step.jinja')
+
+
+    system_prompt = system_template.render()
+    user_query= "Add animations to the slides with the bullet points so that each bullet point appears one after each other"
+    user_query= "Duplicate the slide which has the bullet points"
+
+    base64_encoded_screen_shot = screen.get_screenshot_in_base64()
+    first_step_prompt = first_step_template.render(user_query=user_query)
+    llm_resp = utils.jsonify(send_msg_to_llm(base64_encoded_screen_shot, system_prompt, first_step_prompt))
+    print(llm_resp)
+
+    if not llm_resp["is_application_active"]:
+        print(llm_resp["reason"])
+    else:
+        print(f"Putting {llm_resp["application_name"]} in focus ...")
+        interpreter.activate_application(llm_resp["application_name"])
+
+        # Application is now active
+        execute_next_step(base64_encoded_screen_shot, system_prompt, user_query)
+
     return 0
 
 
-def send_msg_to_llm(base64_encoded_img, file_number, prompt):
+def send_msg_to_llm(base64_encoded_img, system_prompt, prompt):
     message = [
-        {'type': 'text',
-         'text': prompt},
-        {'type': 'image_url',
-         'image_url': {
-             'url': f'data:image/jpeg;base64,{base64_encoded_img}'
-         }
-         }
+        {"role": "system", "content": system_prompt},
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": prompt
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{base64_encoded_img}"
+                    }
+                }
+            ]
+        }
     ]
     print("Sending image to LLM")
     client = OpenAI(api_key=os.getenv("OPEN_API_KEY"))
     response = client.chat.completions.create(
         model=os.getenv("MODEL_IN_USE"),
-        messages=[
-            {
-                'role': 'user',
-                'content': message,
-            }
-        ]
+        messages=message
     )
     llm_response = response.choices[0].message.content.strip()
     return llm_response

@@ -9,24 +9,19 @@ def get_size() -> tuple[int, int]:
     return screen_width, screen_height
 
 
-def get_screenshot(ss_file_name) -> Image.Image:
-    # Enable screen recording from settings
-    img = pyautogui.screenshot()  # Takes roughly 100ms # img.show()
-    img.save(ss_file_name)
-    return img
-
-
-def get_screenshot_in_base64() -> str:
+def get_screenshot_in_base64(ss_file_name="") -> str:
     # Base64 images work with ChatCompletions API but not Assistants API
-    img_bytes = get_screenshot_as_file_object()
+    img_bytes = get_screenshot_as_file_object(ss_file_name)
     encoded_image = base64.b64encode(img_bytes.read()).decode('utf-8')
     return encoded_image
 
 
-def get_screenshot_as_file_object():
+def get_screenshot_as_file_object(ss_file_name=""):
     # In memory files don't work with OpenAI Assistants API because of missing filename attribute
     img_bytes = io.BytesIO()
-    img = get_screenshot(r"ss.png")
+    img = pyautogui.screenshot()  # Takes roughly 100ms # img.show()
+    if ss_file_name:
+        img.save(ss_file_name)
     img.save(img_bytes, format='PNG')  # Save the screenshot to an in-memory file.
     img_bytes.seek(0)
     return img_bytes

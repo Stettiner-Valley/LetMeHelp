@@ -1,0 +1,23 @@
+Given user query: {{user_query}}
+
+Your json output was:
+
+{{llm_json_response}}
+
+Please check following things:
+
+- Given user operating system, do you think this key combination is valid?
+- Given user query, do you think this should be the next step?
+
+if you BELIEVE given json should be the next step or key combination is not right then correct it.
+
+Please return your corrected response in valid json format that I can put in json.loads() without an error - this is extremely important. Do not add any leading or trailing characters.
+Expected LLM Response
+{
+    "correction_needed": ..,
+    "keys": ..,
+    "reason": ".."
+}
+"correction_needed" return True if correction is needed otherwise false
+"keys" list of corrected key presses to execute exactly the next step! If no correction was needed then put None
+"reason" Please justify why you believe correction was needed and user should press these keys combination. If no correction was needed then put None

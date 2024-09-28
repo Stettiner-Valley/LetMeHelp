@@ -1,0 +1,13 @@
+So this is the user query: {{ user_query }}.
+
+First, check which application is required to execute these steps and is that application is visible (open) or not!
+Please return your response in valid json format that I can put in json.loads() without an error - this is extremely important. Do not add any leading or trailing characters.
+Expected LLM Response
+{
+    "is_application_active": ..,
+    "reason": "..",
+    "application_name": ".."
+}
+"is_application_active" should be boolean and it should indicates if application is open or not.
+"reason" should include which applications is needed to execute these steps and explanation of "is_application_active" status here.
+"application_name" if application is active then just write name of open (active) application here nothing else otherwise put None.

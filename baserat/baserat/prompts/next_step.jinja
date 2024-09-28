@@ -1,0 +1,13 @@
+User query: {{ user_query }}
+As you can see required application is open and active active. Considering user query, operating system and application (all three factors are extremely important),
+please think exactly one step of what to do next to help perform user query and return key press combination to perform
+that!
+
+Please return your response in valid json format that I can put in json.loads() without an error - this is extremely important. Do not add any leading or trailing characters.
+Expected LLM Response
+{
+    "keys": ..,
+    "reason": ".."
+}
+"keys" list of key presses to execute exactly the next step!
+"reason" Please justify why you think user should press these keys combination, please mention if you consider user's operating system or not.
