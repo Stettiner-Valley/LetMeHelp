@@ -9,6 +9,7 @@ from baserat import screen, interpreter
 from jinja2 import Environment, FileSystemLoader
 
 from baserat.llm import LLM_HANDLER, LLM_PROVIDER, LLM
+from baserat.platforms.manager import OS
 
 jinja_env = Environment(loader = FileSystemLoader(os.path.join(os.getcwd(), "baserat", "prompts")))
 
@@ -92,10 +93,10 @@ def execute_next_step(llm, base64_encoded_screen_shot, system_prompt, user_query
 
     print("Executing next steps ..")
     llm_resp = llm.send_msg_to_llm(base64_encoded_screen_shot, system_prompt, next_step_prompt)
-    print("Self asking ..")
-    self_ask_template = jinja_env.get_template('self_ask.jinja')
-    self_ask_prompt = self_ask_template.render(user_query=user_query, llm_json_response=llm_resp)
-    llm_resp = llm.send_msg_to_llm(base64_encoded_screen_shot, system_prompt, self_ask_prompt)
+    # print("Self asking ..")
+    # self_ask_template = jinja_env.get_template('self_ask.jinja')
+    # self_ask_prompt = self_ask_template.render(user_query=user_query, llm_json_response=llm_resp)
+    # llm_resp = llm.send_msg_to_llm(base64_encoded_screen_shot, system_prompt, self_ask_prompt)
 
     interpreter.execute_key_commands(llm_resp["keys"])
 
@@ -107,10 +108,14 @@ def main(args=None) -> int:
     llm_model = LLM.GPT40 if llm_provider == LLM_PROVIDER.OPENAI else LLM.MISTRAL
     llm = LLM_HANDLER(llm_provider, llm_model)
 
+    print("Initializing OS manager ...")
+    os_manager = OS()
+
     system_template = jinja_env.get_template('system.jinja')
     first_step_template = jinja_env.get_template('first_step.jinja')
 
-    system_prompt = system_template.render()
+    system_prompt = system_template.render(installed_apps=', '.join(os_manager.os.list_open_applications()))
+
     user_query= "Add animations to the slides with the bullet points so that each bullet point appears one after each other"
     # user_query= "Duplicate the slide which has the bullet points"
 
@@ -118,14 +123,15 @@ def main(args=None) -> int:
     first_step_prompt = first_step_template.render(user_query=user_query)
     llm_resp = llm.send_msg_to_llm(base64_encoded_screen_shot, system_prompt, first_step_prompt)
 
-    if not llm_resp["is_application_active"]:
-        print(llm_resp["reason"])
-    else:
-        print(f"Putting {llm_resp["application_name"]} in focus ...")
-        interpreter.activate_application(llm_resp["application_name"])
+    print(llm_resp)
+    interpreter.activate_application(llm_resp["application_name"])
+    app_rectangle = os_manager.os.get_app_window_rectangle(llm_resp["application_name"])
+    print(app_rectangle)
+    # base64_encoded_screen_shot = screen.get_screenshot_in_base64(app_rectangle)
 
-        # Application is now active
-        execute_next_step(llm, base64_encoded_screen_shot, system_prompt, user_query)
+    # Application is now active
+    # execute_next_step(llm, base64_encoded_screen_shot, system_prompt, user_query)
+
 
     return 0
 
