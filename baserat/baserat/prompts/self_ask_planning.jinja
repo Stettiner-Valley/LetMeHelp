@@ -1,0 +1,21 @@
+Your task was to come up with CLICKABLE steps to perform user query.
+You came with few steps and one of the step you come up with is
+
+{{step}}
+
+You must first confirm if the step above can be performed by the user, by checking if the target UI element exists
+on the screen. If it doesn't, take a look at the screenshot again, and remember that the target goal is to {{ user_query }}, and provide
+a corrected step.
+Describe to yourself all UI elements visible in the screenshot and determine if target ui element you want to click exists - this is extremely important.
+if this ui element does not exist then you need to find something else!
+If the action was correct, then nevermind.
+Please return your response in valid json format that I can put in json.loads() without an error - this is extremely important. Do not add any leading or trailing characters.
+Expected LLM Response
+{
+    "executable" "..",
+    "step" ".."
+    "reason" ".."
+}
+"executable" put true if you believe the step is performable via clicks otherwise put false
+"step" put none if you believe the step is clickable otherwise replace it clickable step, Please make sure step should be exactly one action
+"reason" explain why you believe the step is performable via clicks or why you come up with new step and if element is visible explain where exactly!
