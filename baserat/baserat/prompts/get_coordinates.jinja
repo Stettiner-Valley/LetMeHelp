@@ -1,0 +1,13 @@
+{{user_prompt}}.
+you must estimate the relative fractional x and y coordinates of the point
+to click on, ranging from 0.0 to 1.0. The origin is the top-left corner of the application window.
+Please return your corrected response in valid json format that I can put in json.loads() without an error - this is extremely important. Do not add any leading or trailing characters.
+Expected LLM Response
+{
+    "x" ".."
+    "y" ".."
+    "reason" ".."
+}
+"x" relative fractional x coordinate
+"y" relative fractional y coordinate
+"reason" please why you come up with these fractional values of x and y

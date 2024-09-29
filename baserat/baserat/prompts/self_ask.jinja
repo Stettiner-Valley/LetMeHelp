@@ -1,23 +1,30 @@
-Given user query: {{user_query}}
+This was the user prompt:
 
-Your json output was:
+{{user_prompt}}
 
-{{llm_json_response}}
+Your task was to estimate the relative fractional x and y coordinates of the point to click, ranging
+from 0.0 to 1.0. The origin is the top-left corner of the application window.
 
-Please check following things:
+So you came up with
+x = {{x_coordinate}}
+y = {{y_coordinate}}
 
-- Given user operating system, do you think this key combination is valid?
-- Given user query, do you think this should be the next step?
+and your reason was:
 
-if you BELIEVE given json should be the next step or key combination is not right then correct it.
+{{prev_reason}}
 
-Please return your corrected response in valid json format that I can put in json.loads() without an error - this is extremely important. Do not add any leading or trailing characters.
+We execute click on x and y co ordinate and please check what happened next in the screenshot!
+Please strictly check given the screenshot, And notice if you achieve user query and if your fractional x and y co-ordinates were correct
+and if not please then come up with new co ordinates and correct them!
+Please return your response in valid json format that I can put in json.loads() without an error - this is extremely important. Do not add any leading or trailing characters.
 Expected LLM Response
 {
-    "correction_needed": ..,
-    "keys": ..,
-    "reason": ".."
+    'correction_required': '..'
+    'reason': '..'
+    'x': '..'
+    'y': '..'
 }
-"correction_needed" return True if correction is needed otherwise false
-"keys" list of corrected key presses to execute exactly the next step! If no correction was needed then put None
-"reason" Please justify why you believe correction was needed and user should press these keys combination. If no correction was needed then put None
+"correction_required" put true if correction is required otherwise false
+"reason" Please justify why you believe correction was required or not
+"x" corrected relative fractional x coordinate
+"y" corrected relative fractional y coordinate
