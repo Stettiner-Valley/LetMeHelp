@@ -6,6 +6,11 @@ if [ -f pyproject.toml ]; then
     poetry install
 fi
 
+if [ -z "$OPENAI_API_KEY" ]; then
+  echo "Missing OPENAI_API_KEY environment variable. Please add it to .env file and restart the Docker container."
+  exit 1
+fi
+
 # Run the server in the background
 poetry run python -m server &
 

@@ -5,5 +5,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8765:8765"
+    env_file:
+      - .env
     volumes:
       - "./src:/home/letmehelp/src"

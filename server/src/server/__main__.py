@@ -3,7 +3,7 @@ import json
 import logging
 import uuid
 import sys
-import time
+import openai
 
 from websockets.asyncio.server import serve
 
