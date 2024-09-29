@@ -1,0 +1,15 @@
+services:
+  user-client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # TODO: Why aren't the ports accessible?
+    ports:
+      - "34115:34115"
+      - "5173:5173"
+    environment:
+      DISPLAY: $DISPLAY
+    volumes:
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+      - "~/.Xauthority:/home/letmehelp/.Xauthority"
+      - "./src:/home/letmehelp/src"
