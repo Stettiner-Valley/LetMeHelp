@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-vgo/robotgo"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -34,7 +35,24 @@ func (a *App) startup(ctx context.Context) {
 			break
 		}
 	}
-	runtime.WindowSetPosition(ctx, screenWidth-appWidth, screenHeight-appHeight)
+	platform := runtime.Environment(ctx).Platform
+	appWidthOffset := 0
+	appHeightOffset := 0
+	switch platform {
+	case "windows":
+		// screenWidth and screenHeight don't seem be accurate on Windows :/
+		// We need to figure out some offset to make it go to the edge.
+		appHeightOffset = 105
+		appWidthOffset = 290
+		break
+	case "linux":
+		// All good here.
+		break
+	case "mac":
+		// Same issue, but the window needs to be moved up a bit.
+		break
+	}
+	runtime.WindowSetPosition(ctx, screenWidth-appWidth+appWidthOffset, screenHeight-appHeight+appHeightOffset)
 }
 
 // Screenshot takes a screenshot and returns the base64 encoded image
