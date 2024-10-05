@@ -7,6 +7,22 @@ browser into a single executable.
 
 ## Development Environment
 
+### Windows
+
+The development environment for Windows is not currently Dockerized.
+
+To get started, follow the instructions from [Wails.io's documentation](https://wails.io/docs/gettingstarted/installation).
+
+You need to have [Golang](https://go.dev/doc/install), [Node.js](https://nodejs.org/en/download/package-manager), as well the [TDM GCC compiler](
+https://jmeubank.github.io/tdm-gcc/).
+
+Once you have the dependencies installed, install Wails itself, run `wails doctor` to confirm everything is working,
+and then go to the `src/letmehelp` directory and run `wails dev`.
+
+**To Do:** If we figure out how to forward X11 for Docker containers running in Windows, we can use the fully Dockerized Linux setup. See https://docs.cse.lehigh.edu/xforwarding/xforwarding-win/.
+
+### Linux
+
 Use `rebuild.sh`, `start.sh`, and `stop.sh` to control the Dockerized development environment.
 
 Once inside the container, go to the `~/src/letmehelp` directory and run `wails dev`.
