@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {nextTick, reactive, ref} from 'vue'
-import {Screenshot, GetCursorLocation, TypeWithKeyboard, CursorClick, GetInstalledApplications} from '../../wailsjs/go/main/App'
+import {Screenshot, GetCursorLocation, TypeWithKeyboard, CursorClick, GetInstalledApplications, PressKeyCombo, GetRunningApplications} from '../../wailsjs/go/main/App'
 import {WindowGetPosition, WindowHide, WindowSetPosition, WindowShow} from "../../wailsjs/runtime"
 
 interface DisplayMessage {
@@ -90,6 +90,7 @@ function connect() {
             sendSocketMessage("cursor-location", cursorLocation)
             break
           case "click-at":
+            // TODO: Make this an array as input?
             let coordinates = response.value.split(",")
             if (coordinates.length !== 2) {
               addServerMessage("Oops! The server returned invalid coordinates to click at.")
@@ -100,9 +101,16 @@ function connect() {
           case "type-with-keyboard":
             await TypeWithKeyboard(response.value)
             break
+          case "press-key-combo":
+            await PressKeyCombo(response.value)
+            break
           case "get-installed-applications":
             let installedApplications = await GetInstalledApplications()
             sendSocketMessage("installed-applications", installedApplications)
+            break
+          case "get-running-applications":
+            let runningApplications = await GetRunningApplications()
+            sendSocketMessage("running-applications", runningApplications)
             break
           // TODO: Implement other message types
           /*case "your-action-name":
@@ -149,7 +157,7 @@ function addServerMessage(content: string) {
   addMessage("server", content)
 }
 
-function sendSocketMessage(type: string, value: string|string[]) {
+function sendSocketMessage(type: string, value: any) {
   if (data.socket && data.socket.readyState == 1) {
     // TODO: Right now, we're doing this asynchronously, meaning we don't block user input
     // until the server responds. The server should have a queue on its own end to respond to messages.

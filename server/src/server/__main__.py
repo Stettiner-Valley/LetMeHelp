@@ -102,13 +102,19 @@ async def process(websocket):
                     # These actions have responses
                     # await websocket.send(action_message("get-screenshot", ""))
                     # await websocket.send(action_message("get-cursor-location", ""))
-                    # await websocket.send(action_message("get-installed-applications", "")) 
+                    # await websocket.send(action_message("get-installed-applications", ""))
+                    # For the list of possible keys, see https://github.com/go-vgo/robotgo/blob/master/docs/keys.md
+                    # await websocket.send(action_message("press-key-combo", {"key": "f4", "modifiers": ["alt"]}))
+                    
+                    # THIS IS IN PROGRESS: await websocket.send(action_message("get-running-applications", ""))
                 elif event["type"] == "screenshot":
                     await websocket.send(text_message("Received the screenshot"))
                 elif event["type"] == "cursor-location":
                     await websocket.send(text_message("Received cursor location"))
                 elif event["type"] == "installed-applications":
                     await websocket.send(text_message("Received list of installed applications"))
+                elif event["type"] == "running-applications":
+                    await websocket.send(text_message("Received list of running applications"))
                 else:
                     await websocket.send(error_message("Unsupported message type."))
             except Exception as e:

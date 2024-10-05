@@ -14,6 +14,14 @@ export function GetInstalledApplications() {
   return window['go']['main']['App']['GetInstalledApplications']();
 }
 
+export function GetRunningApplications() {
+  return window['go']['main']['App']['GetRunningApplications']();
+}
+
+export function PressKeyCombo(arg1) {
+  return window['go']['main']['App']['PressKeyCombo'](arg1);
+}
+
 export function Screenshot() {
   return window['go']['main']['App']['Screenshot']();
 }

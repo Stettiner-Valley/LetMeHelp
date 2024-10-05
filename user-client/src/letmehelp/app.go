@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os/exec"
 	"strings"
 
 	"github.com/go-vgo/robotgo"
+	"github.com/mitchellh/go-ps"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -51,6 +53,7 @@ func (a *App) startup(ctx context.Context) {
 		break
 	case "darwin":
 		// Same issue, but the window needs to be moved up a bit.
+		appHeightOffset = -50
 		break
 	}
 	runtime.WindowSetPosition(ctx, screenWidth-appWidth+appWidthOffset, screenHeight-appHeight+appHeightOffset)
@@ -91,7 +94,7 @@ func (a *App) GetInstalledApplications() ([]string, error) {
 	case "linux":
 		return nil, fmt.Errorf("Not implemented yet for Linux!")
 	case "darwin":
-		out, err := exec.Command("ls -1a /Applications").Output()
+		out, err := exec.Command("ls", "-1a", "/Applications").Output()
 		if err != nil {
 			return nil, err
 		}
@@ -100,3 +103,43 @@ func (a *App) GetInstalledApplications() ([]string, error) {
 	}
 	return nil, fmt.Errorf("Failed to detect client platform.")
 }
+
+type KeyCombo struct {
+	Key       string   // e.g. "f4"
+	Modifiers []string // e.g. ["alt"]
+}
+
+// PressKeyCombo presses the combination of specified keys.
+// Possible keys: https://github.com/go-vgo/robotgo/blob/master/docs/keys.md
+// The main key always comes first, followed by modifiers.
+func (a *App) PressKeyCombo(input KeyCombo) {
+	robotgo.KeySleep = 100
+	robotgo.KeyTap(input.Key, input.Modifiers)
+}
+
+type RunningApplication struct {
+	ProcessID int
+	Name      string
+}
+
+// GetRunningApplications retrieves the list of running application windows with name and PID.
+func (a *App) GetRunningApplications() ([]RunningApplication, error) {
+	processList, err := ps.Processes()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get list of running applications")
+	}
+
+	// map ages
+	for x := range processList {
+		var process ps.Process
+		process = processList[x]
+		log.Printf("%d\t%s\n", process.Pid(), process.Executable())
+
+		// do os.* stuff on the pid
+	}
+	return nil, nil
+}
+
+// TODO: Get bounding box of application given window name
+
+// TODO: Screenshot of just the window by window name
