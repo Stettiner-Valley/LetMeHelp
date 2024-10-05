@@ -8,7 +8,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 )
 
-const appWidth = 640
+const appWidth = 400
 const appHeight = 480
 
 //go:embed all:frontend/dist

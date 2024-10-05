@@ -228,7 +228,7 @@ async function screenshot() {
     </div>
     <div class="input-box" :style="{ display: data.settingsModalOpen ? 'none' : 'flex' }">
       <div class="input-wrapper">
-        <textarea placeholder="Send message" @input="adjustTextarea" ref="userInput" id="query" v-model="data.query" autocomplete="off" type="text" @keydown.enter.exact.prevent="query">
+        <textarea spellcheck="false" placeholder="Send message" @input="adjustTextarea" ref="userInput" id="query" v-model="data.query" autocomplete="off" type="text" @keydown.enter.exact.prevent="query">
         </textarea>
         <button class="btn" @click="query">Send</button>
       </div>
@@ -288,20 +288,21 @@ main {
 }
 
 .input-group input {
-  width: 80%;
+  width: 70%;
   padding: 10px;
   font-size: 13px;
 }
 
 .input-group .btn {
   margin-left: 10px;
-  width: 20%;
+  width: 30%;
 }
 
 .messages {
   background: #fbfbfb;
-  height: 295px;
+  height: 256px;
   overflow-y: scroll;
+  font-size: 13px;
 }
 
 .message {
