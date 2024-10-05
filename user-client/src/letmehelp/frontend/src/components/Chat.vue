@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {nextTick, reactive, ref} from 'vue'
-import {Screenshot, GetCursorLocation, TypeWithKeyboard, CursorClick} from '../../wailsjs/go/main/App'
+import {Screenshot, GetCursorLocation, TypeWithKeyboard, CursorClick, GetInstalledApplications} from '../../wailsjs/go/main/App'
 import {WindowGetPosition, WindowHide, WindowSetPosition, WindowShow} from "../../wailsjs/runtime"
 
 interface DisplayMessage {
@@ -20,7 +20,7 @@ interface Data {
 
 interface Message {
   type: string,
-  value: string,
+  value: any,
 }
 
 const userInput = ref<HTMLTextAreaElement | null>(null)
@@ -30,7 +30,7 @@ const data: Data = reactive({
   query: "",
   screenshotBase64: "",
   messages: [],
-  serverAddress: "10.240.183.83:8765", // TODO: Change back to localhost or our server address
+  serverAddress: "127.0.0.1:8765", // TODO: Change back to localhost or our server address
   serverStatus: "Disconnected",
   settingsModalOpen: false,
   socket: null,
@@ -73,7 +73,8 @@ function connect() {
         switch (response.type) {
           case "error":
             // An error message from the server
-            addServerMessage(`Oops! Something went wrong: ${response.value}`)
+            // TODO: Make this yellow.
+            addServerMessage(`Oops! ${response.value}`)
             break
           case "text":
             // A textual message from the server
@@ -99,9 +100,12 @@ function connect() {
           case "type-with-keyboard":
             await TypeWithKeyboard(response.value)
             break
-          // TODO: Implement other message types (e.g. get-screenshot, get-cursor-location, etc.)
-          /*case "WHATEVER_ACTION_NAME":
-            // An "XXXXX" action from the server
+          case "get-installed-applications":
+            let installedApplications = await GetInstalledApplications()
+            sendSocketMessage("installed-applications", installedApplications)
+            break
+          // TODO: Implement other message types
+          /*case "your-action-name":
             // Do the action!
             break;*/
           default:
@@ -109,8 +113,8 @@ function connect() {
             break
         }
       } catch(error) {
-        addServerMessage("Failed to JSON decode server response. See console.")
-        console.log(error)
+        addServerMessage("An error occurred while processing a server message. See console.")
+        console.log("Error:", error)
       }
     }
   }
@@ -145,7 +149,7 @@ function addServerMessage(content: string) {
   addMessage("server", content)
 }
 
-function sendSocketMessage(type: string, value: string) {
+function sendSocketMessage(type: string, value: string|string[]) {
   if (data.socket && data.socket.readyState == 1) {
     // TODO: Right now, we're doing this asynchronously, meaning we don't block user input
     // until the server responds. The server should have a queue on its own end to respond to messages.

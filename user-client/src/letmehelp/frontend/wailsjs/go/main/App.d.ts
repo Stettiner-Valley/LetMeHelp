@@ -5,6 +5,8 @@ export function CursorClick(arg1:number,arg2:number):Promise<void>;
 
 export function GetCursorLocation():Promise<string>;
 
+export function GetInstalledApplications():Promise<Array<string>>;
+
 export function Screenshot():Promise<string>;
 
 export function TypeWithKeyboard(arg1:string):Promise<void>;

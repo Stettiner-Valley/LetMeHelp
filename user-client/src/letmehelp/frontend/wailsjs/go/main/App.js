@@ -10,6 +10,10 @@ export function GetCursorLocation() {
   return window['go']['main']['App']['GetCursorLocation']();
 }
 
+export function GetInstalledApplications() {
+  return window['go']['main']['App']['GetInstalledApplications']();
+}
+
 export function Screenshot() {
   return window['go']['main']['App']['Screenshot']();
 }
