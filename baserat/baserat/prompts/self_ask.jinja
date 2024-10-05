@@ -1,0 +1,30 @@
+This was the user prompt:
+
+{{user_prompt}}
+
+Your task was to estimate the relative fractional x and y coordinates of the point to click, ranging
+from 0.0 to 1.0. The origin is the top-left corner of the application window.
+
+So you came up with
+x = {{x_coordinate}}
+y = {{y_coordinate}}
+
+and your reason was:
+
+{{prev_reason}}
+
+We execute click on x and y co ordinate and please check what happened next in the screenshot!
+Please strictly check given the screenshot, And notice if you achieve user query and if your fractional x and y co-ordinates were correct
+and if not please then come up with new co ordinates and correct them!
+Please return your response in valid json format that I can put in json.loads() without an error - this is extremely important. Do not add any leading or trailing characters.
+Expected LLM Response
+{
+    'correction_required': '..'
+    'reason': '..'
+    'x': '..'
+    'y': '..'
+}
+"correction_required" put true if correction is required otherwise false
+"reason" Please justify why you believe correction was required or not
+"x" corrected relative fractional x coordinate
+"y" corrected relative fractional y coordinate

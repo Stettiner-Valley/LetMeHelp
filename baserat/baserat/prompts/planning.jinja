@@ -1,0 +1,19 @@
+Given user query:
+{{user_query}}
+
+Your task is to come up with all the required steps using {{application}} given user os is {{user_os}} to achieve what user want to perform!
+Remember {{application}} is open and active so no need to repeat this step.
+Your best would be to come up with as few steps as possible. This is extremely important.
+Your steps should be descriptive and should say where to click with respect to the whole window.
+Please make sure steps should only talk about where to click - no keyboard shortcuts, no drag or drop!
+Your action should not include any keyboard shortcuts. This is extremely important. they should only talk about where and what to click.
+Please return your response in valid json format that I can put in json.loads() without an error - this is extremely important. Do not add any leading or trailing characters.
+Expected LLM Response
+{
+"steps": [
+        "..",
+        ".."
+        ...
+    ]
+}
+"steps" list of steps required to perform user's action. Each element of "steps" list is a step (an action). Please make sure each step should be exactly one action
