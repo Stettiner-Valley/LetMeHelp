@@ -95,16 +95,20 @@ async def process(websocket):
                     # ------------------------------------------------------------------------------
 
                     # These actions don't have responses
+                    # TODO: Add cmd + space and other combination presses
                     # await websocket.send(action_message("click-at", "1312,1039"))
                     # await websocket.send(action_message("type-with-keyboard", "LetMeHelp is awesome!"))
 
                     # These actions have responses
                     # await websocket.send(action_message("get-screenshot", ""))
                     # await websocket.send(action_message("get-cursor-location", ""))
+                    # await websocket.send(action_message("get-installed-applications", "")) 
                 elif event["type"] == "screenshot":
                     await websocket.send(text_message("Received the screenshot"))
                 elif event["type"] == "cursor-location":
                     await websocket.send(text_message("Received cursor location"))
+                elif event["type"] == "installed-applications":
+                    await websocket.send(text_message("Received list of installed applications"))
                 else:
                     await websocket.send(error_message("Unsupported message type."))
             except Exception as e:

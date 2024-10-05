@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"os/exec"
+	"strings"
 
 	"github.com/go-vgo/robotgo"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -35,10 +37,9 @@ func (a *App) startup(ctx context.Context) {
 			break
 		}
 	}
-	platform := runtime.Environment(ctx).Platform
 	appWidthOffset := 0
 	appHeightOffset := 0
-	switch platform {
+	switch runtime.Environment(ctx).Platform {
 	case "windows":
 		// screenWidth and screenHeight don't seem be accurate on Windows :/
 		// We need to figure out some offset to make it go to the edge.
@@ -48,7 +49,7 @@ func (a *App) startup(ctx context.Context) {
 	case "linux":
 		// All good here.
 		break
-	case "mac":
+	case "darwin":
 		// Same issue, but the window needs to be moved up a bit.
 		break
 	}
@@ -78,4 +79,24 @@ func (a *App) TypeWithKeyboard(input string) {
 func (a *App) CursorClick(x int, y int) {
 	robotgo.Move(x, y)
 	robotgo.Click()
+}
+
+// GetInstalledApplications retrieves the list of installed applications.
+// This is a platform-specific command.
+func (a *App) GetInstalledApplications() ([]string, error) {
+	switch runtime.Environment(a.ctx).Platform {
+	case "windows":
+		// Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" | findstr "DisplayName"
+		return nil, fmt.Errorf("Not implemented yet for Windows!")
+	case "linux":
+		return nil, fmt.Errorf("Not implemented yet for Linux!")
+	case "darwin":
+		out, err := exec.Command("ls -1a /Applications").Output()
+		if err != nil {
+			return nil, err
+		}
+		outStr := string(out)
+		return strings.Split(outStr, "\n"), nil
+	}
+	return nil, fmt.Errorf("Failed to detect client platform.")
 }
