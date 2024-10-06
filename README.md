@@ -97,6 +97,7 @@ To run the user client, open a terminal, navigate to `user-client/src/letmehelp`
   - See the demo video here: https://www.youtube.com/watch?v=vYXPqMt-mx0
 - Integrate the server in the MVP AI-powered engine (Baserat) 🛠️
 - Write blog posts about our experiences working on this project 🛠️
+- Create a Dockerized test environment to spin up Debian with XFCE, LibreOffice Impress, a web-based VNC viewer, and automatically open PowerPoint and the user client ✅
 
 ## [Test Environment](test-environment/README.md)
 
