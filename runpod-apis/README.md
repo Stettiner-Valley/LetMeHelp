@@ -5,3 +5,4 @@ the server could use.
 
 ## SeeClick
 
+Based on https://github.com/njucckevin/SeeClick
