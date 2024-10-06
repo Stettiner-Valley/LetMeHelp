@@ -21,6 +21,7 @@ pytest = "^7.4.3"
 ruff = "^0.1.9"
 click = "^8.1.7"
 ptpython = "^3.0.29"
+websockets = "^13.1"
 
 
 [[tool.poetry.source]]
