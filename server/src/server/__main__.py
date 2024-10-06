@@ -105,7 +105,7 @@ async def process(websocket):
                     
                     # These actions have responses
                     # await websocket.send(action_message("get-screenshot", ""))
-                    await websocket.send(action_message("get-screenshot-by-pid", 13456))
+                    # await websocket.send(action_message("get-screenshot-by-pid", 13456))
                     # await websocket.send(action_message("get-cursor-location", ""))
                     # await websocket.send(action_message("get-installed-applications", ""))
                     # await websocket.send(action_message("get-running-applications", ""))
