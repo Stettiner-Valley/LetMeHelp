@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {nextTick, reactive, ref} from 'vue'
-import {Screenshot, GetCursorLocation, TypeWithKeyboard, CursorClick, GetInstalledApplications, PressKeyCombo, GetRunningApplications} from '../../wailsjs/go/main/App'
+import {Screenshot, GetCursorLocation, TypeWithKeyboard, CursorClick, GetInstalledApplications, PressKeyCombo, GetRunningApplications, GetApplicationBoundingBoxByPID, BringApplicationToForegroundByPID, ScreenshotByPID} from '../../wailsjs/go/main/App'
 import {WindowGetPosition, WindowHide, WindowSetPosition, WindowShow} from "../../wailsjs/runtime"
 
 interface DisplayMessage {
@@ -84,6 +84,10 @@ function connect() {
             let screenshotData = await screenshot()
             sendSocketMessage("screenshot", screenshotData)
             break
+            case "get-screenshot-by-pid":
+            let screenshotByPIDData = await screenshotByPID(response.value)
+            sendSocketMessage("screenshot-by-pid", screenshotByPIDData)
+            break
           // TODO: Do we want to hide the window, perform the action, and show the window for all actions?
           case "get-cursor-location":
             let cursorLocation = await GetCursorLocation()
@@ -111,6 +115,13 @@ function connect() {
           case "get-running-applications":
             let runningApplications = await GetRunningApplications()
             sendSocketMessage("running-applications", runningApplications)
+            break
+          case "get-application-bounding-box-by-pid":
+            let applicationBoundingBox = await GetApplicationBoundingBoxByPID(response.value)
+            sendSocketMessage("application-bounding-box", applicationBoundingBox)
+            break
+          case "bring-application-to-foreground-by-pid":
+            await BringApplicationToForegroundByPID(response.value)
             break
           // TODO: Implement other message types
           /*case "your-action-name":
@@ -194,6 +205,18 @@ async function screenshot() {
   WindowSetPosition(pos.x, pos.y)
   return screenshotBase64Data
 }
+
+async function screenshotByPID(pid: number) {
+  let pos = await WindowGetPosition()
+  WindowHide()
+  // Wait for the screen to hide
+  await new Promise(f => setTimeout(f, 500))
+  let screenshotBase64Data = await ScreenshotByPID(pid)
+  // Restore the window
+  WindowShow()
+  WindowSetPosition(pos.x, pos.y)
+  return screenshotBase64Data
+}
 </script>
 
 <template>
@@ -210,18 +233,6 @@ async function screenshot() {
         <span>Status:</span>
         <div class="contents" :class="{'text-green': data.serverStatus == 'Connected', 'text-red': data.serverStatus.includes('Error')}">
           {{ data.serverStatus }}
-        </div>
-      </div>
-      <div class="input-group" style="display: none;">
-        <span>Debug</span>
-        <div class="contents debug">
-          <div class="buttons">
-            <button class="btn" @click="screenshot">Screenshot</button>
-<!--            <button class="btn" @click="moveCursor">Move Cursor</button>-->
-<!--            <button class="btn" @click="typeWithKeyboard">Type with Keyboard</button>-->
-<!--            <button class="btn" @click="getCursorLocation">Get Cursor Location</button>-->
-          </div>
-          <img v-if="data.screenshotBase64" alt="" v-bind:src="'data:image/jpeg;base64,'+data.screenshotBase64" onerror="this.style.display='none'"/>
         </div>
       </div>
     </div>
@@ -413,31 +424,5 @@ main {
   border: 1px solid #8cd9ff;
   color: #0088c1;
   background: #f5fcff;
-}
-
-/* ----- */
-/* Debug */
-/* ----- */
-
-.debug {
-  margin-top: 15px;
-  width: 100%;
-}
-
-.debug .buttons {
-  margin: auto auto 15px;
-  width: 100%;
-}
-
-.debug .buttons button {
-  margin-right: 5px;
-  margin-bottom: 5px;
-}
-
-.debug img {
-  display: block;
-  width: auto;
-  height: 150px;
-  margin: auto;
 }
 </style>

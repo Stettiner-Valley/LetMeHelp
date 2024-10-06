@@ -10,6 +10,7 @@ package-mode = false
 python = "^3.10"
 websockets = "^13.1"
 openai = "^1.50.2"
+pillow = "^10.4.0"
 
 
 [build-system]

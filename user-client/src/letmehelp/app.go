@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"log"
 	"os/exec"
 	"strings"
 
 	"github.com/go-vgo/robotgo"
-	"github.com/mitchellh/go-ps"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -20,6 +19,26 @@ type App struct {
 // NewApp creates a new App application struct
 func NewApp() *App {
 	return &App{}
+}
+
+// getCoordinateOffsets solves an issue where coordinates of windows in different platforms are a bit off.
+func (a *App) getCoordinateOffsets() (appWidthOffset int, appHeightOffset int) {
+	switch runtime.Environment(a.ctx).Platform {
+	case "windows":
+		// screenWidth and screenHeight don't seem be accurate on Windows :/
+		// We need to figure out some offset to make it go to the edge.
+		appHeightOffset = 105
+		appWidthOffset = 290
+		break
+	case "linux":
+		// All good here.
+		break
+	case "darwin":
+		// Same issue, but the window needs to be moved up a bit.
+		appHeightOffset = -50
+		break
+	}
+	return appWidthOffset, appHeightOffset
 }
 
 // startup is called when the app starts. The context is saved
@@ -39,32 +58,36 @@ func (a *App) startup(ctx context.Context) {
 			break
 		}
 	}
-	appWidthOffset := 0
-	appHeightOffset := 0
-	switch runtime.Environment(ctx).Platform {
-	case "windows":
-		// screenWidth and screenHeight don't seem be accurate on Windows :/
-		// We need to figure out some offset to make it go to the edge.
-		appHeightOffset = 105
-		appWidthOffset = 290
-		break
-	case "linux":
-		// All good here.
-		break
-	case "darwin":
-		// Same issue, but the window needs to be moved up a bit.
-		appHeightOffset = -50
-		break
-	}
+	appWidthOffset, appHeightOffset := a.getCoordinateOffsets()
 	runtime.WindowSetPosition(ctx, screenWidth-appWidth+appWidthOffset, screenHeight-appHeight+appHeightOffset)
 }
 
 // Screenshot takes a screenshot and returns the base64 encoded image
-func (a *App) Screenshot() string {
+func (a *App) Screenshot() (string, error) {
 	// TODO: How to find the active screen?
 	// For now take a screenshot of the primary screen
 	screenshot := robotgo.CaptureScreen()
-	return string(robotgo.ToByteImg(robotgo.ToImage(screenshot)))
+	return string(robotgo.ToByteImg(robotgo.ToImage(screenshot))), nil
+}
+
+// Screenshot takes a screenshot of the application identified by the PID and returns the base64 encoded image
+func (a *App) ScreenshotByPID(pid int) (string, error) {
+	// 1. Bring the application to foreground
+	err := a.BringApplicationToForegroundByPID(pid)
+	if err != nil {
+		return "", err
+	}
+
+	// 2. Get the bounding box of the application
+	boundingBox, err := a.GetApplicationBoundingBoxByPID(pid)
+	if err != nil {
+		return "", err
+	}
+
+	// 3. Take a screenshot of the bounding box
+	// TODO: For some reason the screenshot is a bit off when tested in Windows.
+	screenshot := robotgo.CaptureScreen(boundingBox.Top, boundingBox.Left, boundingBox.Right, boundingBox.Bottom)
+	return string(robotgo.ToByteImg(robotgo.ToImage(screenshot))), nil
 }
 
 // GetCursorLocation returns the (x,y) coordinates of the current cursor location
@@ -89,7 +112,8 @@ func (a *App) CursorClick(x int, y int) {
 func (a *App) GetInstalledApplications() ([]string, error) {
 	switch runtime.Environment(a.ctx).Platform {
 	case "windows":
-		// Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" | findstr "DisplayName"
+		// Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" | findstr "DisplayName" | ConvertTo-Json
+		// Then convert to JSON
 		return nil, fmt.Errorf("Not implemented yet for Windows!")
 	case "linux":
 		return nil, fmt.Errorf("Not implemented yet for Linux!")
@@ -118,28 +142,87 @@ func (a *App) PressKeyCombo(input KeyCombo) {
 }
 
 type RunningApplication struct {
-	ProcessID int
-	Name      string
+	ProcessID   int
+	ProcessName string
+	WindowTitle string
 }
 
-// GetRunningApplications retrieves the list of running application windows with name and PID.
+type WindowsProcessInfo struct {
+	Id              int    `json:"Id"`
+	ProcessName     string `json:"ProcessName"`
+	MainWindowTitle string `json:"MainWindowTitle"`
+}
+
+// GetRunningApplications retrieves the list of running applications.
 func (a *App) GetRunningApplications() ([]RunningApplication, error) {
-	processList, err := ps.Processes()
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get list of running applications")
+	switch runtime.Environment(a.ctx).Platform {
+	case "windows":
+		out, err := exec.Command("powershell", "/C", `Get-Process | Select MainWindowTitle,ProcessName,Id | where{$_.MainWindowTitle -ne ""} | ConvertTo-Json`).Output()
+		if err != nil {
+			return nil, err
+		}
+		var windowsProcesses []WindowsProcessInfo
+		json.Unmarshal(out, &windowsProcesses)
+		runningApplications := make([]RunningApplication, len(windowsProcesses))
+		for i, p := range windowsProcesses {
+			runningApplications[i] = RunningApplication{
+				ProcessID:   p.Id,
+				ProcessName: p.ProcessName,
+				WindowTitle: p.MainWindowTitle,
+			}
+		}
+		return runningApplications, nil
+	case "linux":
+		return nil, fmt.Errorf("Not implemented yet for Linux!")
+	case "darwin":
+		return nil, fmt.Errorf("Not implemented yet for Mac!")
 	}
-
-	// map ages
-	for x := range processList {
-		var process ps.Process
-		process = processList[x]
-		log.Printf("%d\t%s\n", process.Pid(), process.Executable())
-
-		// do os.* stuff on the pid
-	}
-	return nil, nil
+	return nil, fmt.Errorf("Failed to detect client platform.")
 }
 
-// TODO: Get bounding box of application given window name
+type ApplicationBoundingBox struct {
+	Top    int `json:"top"`
+	Left   int `json:"left"`
+	Bottom int `json:"bottom"`
+	Right  int `json:"right"`
+	PID    int
+}
 
-// TODO: Screenshot of just the window by window name
+// Get bounding box of application by PID
+func (a *App) GetApplicationBoundingBoxByPID(pid int) (ApplicationBoundingBox, error) {
+	switch runtime.Environment(a.ctx).Platform {
+	case "windows":
+		out, err := exec.Command("powershell", "/C", fmt.Sprintf("Add-Type -TypeDefinition 'using System;using System.Runtime.InteropServices;public class Win32 {[DllImport(\"user32.dll\")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);public struct RECT {public int Left;public int Top;public int Right;public int Bottom;}}' ; $rect = New-Object Win32+RECT; [Win32]::GetWindowRect((Get-Process -Id %d).MainWindowHandle, [ref]$rect) | Out-Null; ConvertTo-Json @{Left=$rect.Left; Top=$rect.Top; Right=$rect.Right; Bottom=$rect.Bottom}", pid)).Output()
+		if err != nil {
+			return ApplicationBoundingBox{}, err
+		}
+		var boundingBox ApplicationBoundingBox
+		boundingBox.PID = pid
+		json.Unmarshal(out, &boundingBox)
+		return boundingBox, nil
+	case "linux":
+		// xdotool search --pid $PID
+		return ApplicationBoundingBox{}, fmt.Errorf("Not implemented yet for Linux!")
+	case "darwin":
+		// osascript -e "tell application \"System Events\" to tell (first process whose unix id is $PID) to get properties of window 1" | grep -E 'position:|size:'
+		return ApplicationBoundingBox{}, fmt.Errorf("Not implemented yet for Mac!")
+	}
+	return ApplicationBoundingBox{}, fmt.Errorf("Failed to detect client platform.")
+}
+
+// BringApplicationToForeground brings the application window identified by the PID to the foreground.
+func (a *App) BringApplicationToForegroundByPID(pid int) error {
+	switch runtime.Environment(a.ctx).Platform {
+	case "windows":
+		_, err := exec.Command("powershell", "/C", fmt.Sprintf("(New-Object -ComObject WScript.Shell).AppActivate((Get-Process -Id %d).MainWindowTitle)", pid)).Output()
+		if err != nil {
+			return err
+		}
+		return nil
+	case "linux":
+		return fmt.Errorf("Not implemented yet for Linux!")
+	case "darwin":
+		return fmt.Errorf("Not implemented yet for Mac!")
+	}
+	return fmt.Errorf("Failed to detect client platform.")
+}

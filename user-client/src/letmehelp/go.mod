@@ -6,7 +6,6 @@ toolchain go1.23.1
 
 require (
 	github.com/go-vgo/robotgo v0.110.3
-	github.com/mitchellh/go-ps v1.0.0
 	github.com/wailsapp/wails/v2 v2.9.2
 )
 

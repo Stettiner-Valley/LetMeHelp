@@ -3,7 +3,9 @@ import json
 import logging
 import uuid
 import sys
-import openai
+from PIL import Image
+from io import BytesIO
+import base64
 
 from websockets.asyncio.server import serve
 
@@ -95,26 +97,33 @@ async def process(websocket):
                     # ------------------------------------------------------------------------------
 
                     # These actions don't have responses
-                    # TODO: Add cmd + space and other combination presses
                     # await websocket.send(action_message("click-at", "1312,1039"))
                     # await websocket.send(action_message("type-with-keyboard", "LetMeHelp is awesome!"))
-
-                    # These actions have responses
-                    # await websocket.send(action_message("get-screenshot", ""))
-                    # await websocket.send(action_message("get-cursor-location", ""))
-                    # await websocket.send(action_message("get-installed-applications", ""))
                     # For the list of possible keys, see https://github.com/go-vgo/robotgo/blob/master/docs/keys.md
                     # await websocket.send(action_message("press-key-combo", {"key": "f4", "modifiers": ["alt"]}))
+                    # await websocket.send(action_message("bring-application-to-foreground-by-pid", 13456))
                     
-                    # THIS IS IN PROGRESS: await websocket.send(action_message("get-running-applications", ""))
+                    # These actions have responses
+                    # await websocket.send(action_message("get-screenshot", ""))
+                    await websocket.send(action_message("get-screenshot-by-pid", 13456))
+                    # await websocket.send(action_message("get-cursor-location", ""))
+                    # await websocket.send(action_message("get-installed-applications", ""))
+                    # await websocket.send(action_message("get-running-applications", ""))
+                    # await websocket.send(action_message("get-application-bounding-box-by-pid", 13456))
                 elif event["type"] == "screenshot":
+                    Image.open(BytesIO(base64.b64decode(event["value"]))).show()
                     await websocket.send(text_message("Received the screenshot"))
+                elif event["type"] == "screenshot-by-pid":
+                    Image.open(BytesIO(base64.b64decode(event["value"]))).show()
+                    await websocket.send(text_message("Received the screenshot of application"))
                 elif event["type"] == "cursor-location":
                     await websocket.send(text_message("Received cursor location"))
                 elif event["type"] == "installed-applications":
                     await websocket.send(text_message("Received list of installed applications"))
                 elif event["type"] == "running-applications":
                     await websocket.send(text_message("Received list of running applications"))
+                elif event["type"] == "application-bounding-box":
+                    await websocket.send(text_message("Received the bounding box coordinates of the application"))
                 else:
                     await websocket.send(error_message("Unsupported message type."))
             except Exception as e:
